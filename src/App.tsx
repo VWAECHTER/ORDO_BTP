@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PageLoader } from './components/ui/Spinner';
-import { Landing, Login, Signup, ForgotPassword, Dashboard, Analytics, Projects, Team, Settings } from './pages';
+import { Landing, Login, Signup, ForgotPassword, Dashboard, AppelOffres, AssistantReunion, Settings } from './pages';
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -60,28 +60,19 @@ function AppRoutes() {
       />
 
       <Route
-        path="/analytics"
+        path="/appel-offres"
         element={
           <ProtectedRoute>
-            <Analytics />
+            <AppelOffres />
           </ProtectedRoute>
         }
       />
 
       <Route
-        path="/projects"
+        path="/assistant-reunion"
         element={
           <ProtectedRoute>
-            <Projects />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/team"
-        element={
-          <ProtectedRoute>
-            <Team />
+            <AssistantReunion />
           </ProtectedRoute>
         }
       />

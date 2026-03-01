@@ -1,9 +1,8 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
-  BarChart3,
-  FolderKanban,
-  Users,
+  FileText,
+  Users2,
   Settings,
   LogOut,
   Menu,
@@ -17,9 +16,8 @@ import { ChatBot } from '../chat/ChatBot';
 
 const navigation = [
   { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Analytiques', href: '/analytics', icon: BarChart3 },
-  { name: 'Projets', href: '/projects', icon: FolderKanban },
-  { name: 'Equipe', href: '/team', icon: Users },
+  { name: 'Appel d\'Offres', href: '/appel-offres', icon: FileText },
+  { name: 'Assistant réunion', href: '/assistant-reunion', icon: Users2 },
 ];
 
 const secondaryNavigation = [
