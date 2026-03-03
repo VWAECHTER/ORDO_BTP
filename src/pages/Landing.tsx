@@ -207,10 +207,7 @@ export function Landing() {
               Nouveau : Integrations Zapier disponibles
             </div>
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-slate-900 tracking-tight leading-[1.1]">
-              La plateforme qui
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-slate-700 to-slate-500">
-                accelere votre business
-              </span>
+              Structurer, vérifier, sécuriser
             </h1>
             <p className="mt-8 text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
               Centralisez vos operations, automatisez vos workflows et prenez des decisions
