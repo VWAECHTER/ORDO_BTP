@@ -1,7 +1,11 @@
 import { AppLayout } from '../components/layout/AppLayout';
 import { Card } from '../components/ui/Card';
-import { Building, Construction, HardHat } from 'lucide-react';
+import { Building, Construction, HardHat, FolderOpen } from 'lucide-react';
 import { useState } from 'react';
+import { FileUpload } from '../components/appel-offres/FileUpload';
+import { AnalysisSection } from '../components/appel-offres/AnalysisSection';
+import { TechnicalMemoSection } from '../components/appel-offres/TechnicalMemoSection';
+import { ChatDialog } from '../components/appel-offres/ChatDialog';
 
 const categories = [
   {
@@ -29,6 +33,25 @@ const categories = [
 
 export function AppelOffres() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [hasDocuments, setHasDocuments] = useState(false);
+  const [hasAnalysis, setHasAnalysis] = useState(false);
+  const [hasMemo, setHasMemo] = useState(false);
+
+  const handleFilesChange = (files: File[]) => {
+    if (files.length > 0) {
+      setHasDocuments(true);
+    }
+  };
+
+  const handleAnalyze = async () => {
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setHasAnalysis(true);
+  };
+
+  const handleGenerateMemo = async () => {
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setHasMemo(true);
+  };
 
   return (
     <AppLayout
@@ -67,19 +90,45 @@ export function AppelOffres() {
         </div>
 
         {selectedCategory && (
-          <Card>
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-slate-900 mb-4">
-                {categories.find(c => c.id === selectedCategory)?.name}
-              </h2>
-              <div className="space-y-4">
-                <div className="text-center py-12 text-slate-500">
-                  <p>Aucun appel d'offres pour le moment</p>
-                  <p className="text-sm mt-2">Les appels d'offres apparaîtront ici</p>
+          <div className="space-y-6">
+            <Card>
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <FolderOpen className="w-6 h-6 text-slate-700" />
+                  <h2 className="text-xl font-bold text-slate-900">
+                    {categories.find(c => c.id === selectedCategory)?.name}
+                  </h2>
+                </div>
+
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                      Dossier marché (DCE)
+                    </h3>
+                    <FileUpload onFilesChange={handleFilesChange} />
+                  </div>
+
+                  <div className="border-t border-slate-200 pt-8">
+                    <AnalysisSection
+                      hasDocuments={hasDocuments}
+                      onAnalyze={handleAnalyze}
+                    />
+                  </div>
+
+                  <div className="border-t border-slate-200 pt-8">
+                    <TechnicalMemoSection
+                      hasAnalysis={hasAnalysis}
+                      onGenerate={handleGenerateMemo}
+                    />
+                  </div>
+
+                  <div className="border-t border-slate-200 pt-8">
+                    <ChatDialog hasMemo={hasMemo} />
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
         )}
       </div>
     </AppLayout>
