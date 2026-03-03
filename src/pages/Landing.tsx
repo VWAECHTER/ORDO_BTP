@@ -210,8 +210,7 @@ export function Landing() {
               Structurer, vérifier, sécuriser
             </h1>
             <p className="mt-8 text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              Centralisez vos operations, automatisez vos workflows et prenez des decisions
-              eclairees grace a des donnees en temps reel. Rejoignez 10 000+ entreprises.
+              ORDO est un outil B2B d'assistance méthodologique destiné à structurer, vérifier et sécuriser vos appels d'offres et vos réunions. Rejoignez 200+ entreprises.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/signup">
