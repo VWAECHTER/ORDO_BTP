@@ -4,6 +4,8 @@ interface CardProps {
   children: ReactNode;
   className?: string;
   padding?: 'none' | 'sm' | 'md' | 'lg';
+  hover?: boolean;
+  onClick?: () => void;
 }
 
 const paddingClasses = {
@@ -13,14 +15,16 @@ const paddingClasses = {
   lg: 'p-8',
 };
 
-export function Card({ children, className = '', padding = 'md' }: CardProps) {
+export function Card({ children, className = '', padding = 'md', hover = false, onClick }: CardProps) {
   return (
     <div
       className={`
         bg-white rounded-xl shadow-sm border border-slate-200
         ${paddingClasses[padding]}
+        ${hover ? 'hover:shadow-md transition-shadow' : ''}
         ${className}
       `}
+      onClick={onClick}
     >
       {children}
     </div>
