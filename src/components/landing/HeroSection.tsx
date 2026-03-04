@@ -42,7 +42,7 @@ export default function HeroSection() {
 
           <p className="text-xl text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed">
             ORDO structure, vérifie et sécurise vos réponses aux appels d'offres complexes
-            grâce à une méthodologie éprouvée et une intelligence artificielle dédiée.
+            grâce à une méthodologie éprouvée et une préparation rigoureuse de chaque réponse.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
