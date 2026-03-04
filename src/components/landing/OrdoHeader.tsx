@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, X, Building2 } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 export default function OrdoHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,8 +17,7 @@ export default function OrdoHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-3">
-            <Building2 className="w-8 h-8 text-navy-600" />
-            <span className="text-xl font-bold text-navy-700">ORDO BTP</span>
+            <img src="/logo_ok-removebg-preview.png" alt="ORDO BTP" className="h-10 w-auto" />
           </div>
 
           <nav className="hidden md:flex items-center space-x-8">

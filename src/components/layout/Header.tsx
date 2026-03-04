@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { LogOut, Settings, User, LayoutDashboard } from 'lucide-react';
+import { LogOut, Settings, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/Button';
 import { useState, useRef, useEffect } from 'react';
@@ -33,10 +33,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
-              <LayoutDashboard className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-semibold text-slate-900">Dashboard</span>
+            <img src="/logo_ok-removebg-preview.png" alt="ORDO BTP" className="h-8 w-auto" />
           </Link>
 
           <div className="relative" ref={menuRef}>
@@ -109,10 +106,7 @@ export function PublicHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center">
-              <LayoutDashboard className="w-6 h-6 text-white" />
-            </div>
-            <span className="font-bold text-xl text-slate-900">AppName</span>
+            <img src="/logo_ok-removebg-preview.png" alt="ORDO BTP" className="h-10 w-auto" />
           </Link>
 
           <div className="flex items-center gap-4">

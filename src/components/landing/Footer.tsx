@@ -1,5 +1,3 @@
-import { Building2 } from 'lucide-react';
-
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
@@ -8,8 +6,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center space-y-6">
           <div className="flex items-center space-x-3">
-            <Building2 className="w-8 h-8 text-gold-400" />
-            <span className="text-2xl font-bold text-white">ORDO</span>
+            <img src="/logo_ok-removebg-preview.png" alt="ORDO BTP" className="h-12 w-auto" />
           </div>
 
           <p className="text-gray-300 text-sm max-w-md">
