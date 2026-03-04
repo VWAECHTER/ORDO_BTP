@@ -71,7 +71,7 @@ export function AppelOffres() {
                 className={`cursor-pointer transition-all ${
                   isSelected ? 'ring-2 ring-slate-900 shadow-lg' : ''
                 }`}
-                onClick={() => setSelectedCategory(isSelected ? null : category.id)}
+                onClick={() => setSelectedCategory(category.id)}
               >
                 <div className="p-6">
                   <div className={`w-12 h-12 ${category.color} rounded-lg flex items-center justify-center mb-4`}>
