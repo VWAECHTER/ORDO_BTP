@@ -1,5 +1,4 @@
 import { Upload, File, X } from 'lucide-react';
-import { Button } from '../ui/Button';
 import { useState, useRef } from 'react';
 
 interface UploadedFile {
