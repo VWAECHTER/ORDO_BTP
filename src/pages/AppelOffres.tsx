@@ -1,6 +1,6 @@
 import { AppLayout } from '../components/layout/AppLayout';
 import { Card } from '../components/ui/Card';
-import { Building, Construction, HardHat, FolderOpen } from 'lucide-react';
+import { Building, Construction, HardHat, FolderOpen, Truck } from 'lucide-react';
 import { useState } from 'react';
 import { FileUpload } from '../components/appel-offres/FileUpload';
 import { AnalysisSection } from '../components/appel-offres/AnalysisSection';
@@ -28,6 +28,13 @@ const categories = [
     icon: Construction,
     description: 'Construction et maintenance de ponts et ouvrages d\'art',
     color: 'bg-orange-500'
+  },
+  {
+    id: 'vrd-tp',
+    name: 'VRD/TP',
+    icon: Truck,
+    description: 'Voirie, réseaux divers et travaux publics',
+    color: 'bg-purple-500'
   }
 ];
 
@@ -59,7 +66,7 @@ export function AppelOffres() {
       description="Gérez vos appels d'offres par catégorie"
     >
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {categories.map((category) => {
             const Icon = category.icon;
             const isSelected = selectedCategory === category.id;
