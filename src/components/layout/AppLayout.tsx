@@ -1,14 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  FileText,
-  Users2,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  ChevronRight
-} from 'lucide-react';
+import { LayoutDashboard, FileText, Users as Users2, Settings, LogOut, Menu, X, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useState } from 'react';
 import { ChatBot } from '../chat/ChatBot';
