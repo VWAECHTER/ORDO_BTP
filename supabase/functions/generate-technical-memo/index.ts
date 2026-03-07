@@ -78,6 +78,64 @@ Deno.serve(async (req: Request) => {
     const strategicAnalysis = analysis.strategic_analysis || { piliers: [] };
     const blockingQuestions = analysis.blocking_questions || [];
 
+    const categoryLower = (project.category || "").toLowerCase();
+    let modesOperatoiresGuidance = "";
+
+    if (categoryLower.includes("go") || categoryLower.includes("bâtiment")) {
+      modesOperatoiresGuidance = `
+Pour GO/Bâtiment, couvre (si le DCE le demande) :
+- Installation de chantier
+- Implantation
+- Terrassement et fondations
+- Coffrage et ferraillage
+- Bétonnage (vibration/cure)
+- Réservations et scellements
+- Maçonnerie
+- Étanchéité si concernée
+- Finitions liées au lot
+- Points d'arrêt et contrôles`;
+    } else if (categoryLower.includes("génie civil") || categoryLower.includes("genie civil")) {
+      modesOperatoiresGuidance = `
+Pour Génie Civil, couvre :
+- Terrassements
+- Stabilité
+- Radiers et voiles
+- Béton armé (BA)
+- Reprises et joints
+- Étanchéité
+- Pompage/épuisement si mentionné
+- Essais et contrôles
+- EXE/notes/visas si requis`;
+    } else if (categoryLower.includes("oa") || categoryLower.includes("pont") || categoryLower.includes("ouvrage d'art")) {
+      modesOperatoiresGuidance = `
+Pour OA/Pont, couvre :
+- Accès et levage
+- Interventions sur appuis et tablier selon CCTP
+- Étanchéité, joints et équipements si mentionnés
+- Points d'arrêt
+- Contrôles et essais
+- Tolérances
+- Contraintes sous circulation si imposées`;
+    } else if (categoryLower.includes("vrd") || categoryLower.includes("tp") || categoryLower.includes("travaux publics")) {
+      modesOperatoiresGuidance = `
+Pour VRD/TP, couvre :
+- DICT et sondages si mentionnés
+- Terrassement
+- Blindage si requis
+- Pose des réseaux
+- Remblai et compactage
+- Contrôles et essais si exigés
+- Récolement
+- Signalisation et relations riverains si concernés`;
+    } else {
+      modesOperatoiresGuidance = `
+Adapte les modes opératoires selon le type de projet et les exigences du CCTP :
+- Méthodologie détaillée pour chaque phase de travaux
+- Techniques et procédures spécifiques
+- Séquencement des opérations
+- Contrôles et points d'arrêt`;
+    }
+
     const prompt = `Tu es un expert en rédaction de mémoires techniques pour le BTP. Génère un mémoire technique professionnel selon ce plan STRICT :
 
 CONTEXTE DU PROJET:
@@ -117,10 +175,8 @@ STRUCTURE STRICTE DU MÉMOIRE (ne change jamais cette structure) :
    - EXE (plans d'exécution) si requis par le marché
 
 **4. Modes opératoires**
-   (Cette section DOIT être adaptée selon la sous-section et le CCTP)
-   - Méthodologie détaillée pour chaque phase de travaux
-   - Techniques et procédures spécifiques
-   - Séquencement des opérations
+   (Cette section DOIT être adaptée selon la catégorie ci-dessous)
+   ${modesOperatoiresGuidance}
 
 **5. Phasage & maintien de la circulation/exploitation**
    (Si imposé par le marché)
@@ -148,7 +204,7 @@ IMPORTANT:
 - Génère un mémoire COMPLET, professionnel et détaillé
 - Chaque section doit faire plusieurs paragraphes
 - Utilise des termes techniques appropriés au BTP
-- Adapte UNIQUEMENT la section 4 (Modes opératoires) selon le type de projet
+- Adapte UNIQUEMENT la section 4 (Modes opératoires) selon la catégorie du projet
 - Toutes les autres sections restent identiques dans leur structure
 - Sois concret et précis
 - Format: Markdown avec titres et sous-titres clairs`;
