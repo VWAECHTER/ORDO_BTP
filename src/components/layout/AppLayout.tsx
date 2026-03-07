@@ -7,8 +7,7 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronRight,
-  Building2
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useState } from 'react';
@@ -73,10 +72,8 @@ export function AppLayout({ children, title, description, actions }: AppLayoutPr
           <Menu className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-white" />
-          </div>
-          <span className="font-semibold text-slate-900">AppName</span>
+          <img src="/logo_ok_sans_txt.png" alt="ORDO" className="h-8 w-auto" />
+          <span className="font-semibold text-[#0f1d35]">ORDO</span>
         </div>
         <div className="w-10" />
       </div>
@@ -90,10 +87,8 @@ export function AppLayout({ children, title, description, actions }: AppLayoutPr
           <div className="absolute left-0 top-0 bottom-0 w-72 bg-white">
             <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-white" />
-                </div>
-                <span className="font-semibold text-slate-900">AppName</span>
+                <img src="/logo_ok_sans_txt.png" alt="ORDO" className="h-8 w-auto" />
+                <span className="font-semibold text-[#0f1d35]">ORDO</span>
               </div>
               <button
                 onClick={() => setSidebarOpen(false)}
@@ -118,10 +113,8 @@ export function AppLayout({ children, title, description, actions }: AppLayoutPr
 
       <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col bg-white border-r border-slate-200">
         <div className="h-16 flex items-center gap-2 px-6 border-b border-slate-200">
-          <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-white" />
-          </div>
-          <span className="font-semibold text-slate-900">AppName</span>
+          <img src="/logo_ok_sans_txt.png" alt="ORDO" className="h-8 w-auto" />
+          <span className="font-semibold text-[#0f1d35]">ORDO</span>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
