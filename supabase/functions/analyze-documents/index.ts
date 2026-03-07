@@ -140,6 +140,13 @@ Format de réponse attendu (JSON strict, pas de texte avant ou après) :
 
 Les 5 piliers doivent couvrir : compétences techniques, moyens humains/matériels, conformité réglementaire, capacité financière, et méthodologie/planning.
 
+QUESTIONS BLOQUANTES (OBLIGATOIRE) :
+- Liste TOUTES les informations manquantes ou imprécises du DCE nécessaires pour candidater
+- Questions pour le MOE/MO (maître d'œuvre/maître d'ouvrage)
+- Questions pour l'entreprise (ressources internes, capacités)
+- Minimum 5-7 questions bloquantes identifiées
+- Format : {"question": "texte précis", "importance": "Critique" ou "Important"}
+
 NE GÉNÈRE PAS de mémoire technique. C'est une ANALYSE STRATÉGIQUE uniquement.`;
 
     const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {

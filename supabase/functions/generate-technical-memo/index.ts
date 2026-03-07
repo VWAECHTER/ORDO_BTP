@@ -198,7 +198,9 @@ STRUCTURE STRICTE DU MÉMOIRE (ne change jamais cette structure) :
 **Conclusion : Actions clés & Questions bloquantes**
    (OBLIGATOIRE)
    - Récapitulatif des actions prioritaires (minimum 8 actions)
-   - Liste des questions bloquantes à lever avant démarrage (minimum 7 questions)
+   - Questions bloquantes : liste TOUTES les infos manquantes nécessaires (minimum 7 questions)
+   - Questions pour le MOE/MO (maître d'œuvre/maître d'ouvrage)
+   - Questions pour l'entreprise (ressources internes, capacités)
    - Total combiné : au moins 15 items
 
 EXIGENCES DE LONGUEUR (NON NÉGOCIABLE) :
@@ -214,7 +216,6 @@ TABLEAUX À INTÉGRER (si pertinent selon DCE) :
 - Tableau des moyens matériels (équipement, quantité, usage)
 - Tableau des points d'arrêt et contrôles/PV
 - Tableau de phasage macro (phases, durée, activités principales)
-- Si information absente du DCE : indiquer "Non spécifié dans le DCE" et formuler une question
 
 IMPORTANT:
 - Génère un mémoire COMPLET, professionnel et DÉTAILLÉ
