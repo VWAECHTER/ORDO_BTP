@@ -197,17 +197,34 @@ STRUCTURE STRICTE DU MÉMOIRE (ne change jamais cette structure) :
 
 **Conclusion : Actions clés & Questions bloquantes**
    (OBLIGATOIRE)
-   - Récapitulatif des actions prioritaires
-   - Liste des questions bloquantes à lever avant démarrage
+   - Récapitulatif des actions prioritaires (minimum 8 actions)
+   - Liste des questions bloquantes à lever avant démarrage (minimum 7 questions)
+   - Total combiné : au moins 15 items
+
+EXIGENCES DE LONGUEUR (NON NÉGOCIABLE) :
+- Le mémoire DOIT correspondre à un équivalent de 15 pages A4 minimum
+- Sections 1 & 2 : 600-900 mots CHACUNE
+- Section 3 : 600-900 mots
+- Section 4 : 2000-3000 mots (la plus développée)
+- Sections 5, 6 & 7 : 800-1200 mots CHACUNE
+- Conclusion : au moins 15 items (actions + questions)
+
+TABLEAUX À INTÉGRER (si pertinent selon DCE) :
+- Tableau des moyens humains (fonction, qualification, nombre)
+- Tableau des moyens matériels (équipement, quantité, usage)
+- Tableau des points d'arrêt et contrôles/PV
+- Tableau de phasage macro (phases, durée, activités principales)
+- Si information absente du DCE : indiquer "Non spécifié dans le DCE" et formuler une question
 
 IMPORTANT:
-- Génère un mémoire COMPLET, professionnel et détaillé
-- Chaque section doit faire plusieurs paragraphes
+- Génère un mémoire COMPLET, professionnel et DÉTAILLÉ
+- NE FAIS PAS COURT : chaque section doit respecter les comptages de mots minimums
 - Utilise des termes techniques appropriés au BTP
+- Sois factuel et orienté chantier, basé sur le DCE
+- Pas de remplissage artificiel : contenu technique dense et pertinent
 - Adapte UNIQUEMENT la section 4 (Modes opératoires) selon la catégorie du projet
 - Toutes les autres sections restent identiques dans leur structure
-- Sois concret et précis
-- Format: Markdown avec titres et sous-titres clairs`;
+- Format: Markdown avec titres, sous-titres et tableaux clairs`;
 
     const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -228,7 +245,7 @@ IMPORTANT:
           }
         ],
         temperature: 0.7,
-        max_tokens: 4000,
+        max_tokens: 8000,
       }),
     });
 
