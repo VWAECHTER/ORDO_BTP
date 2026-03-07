@@ -1,0 +1,233 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
+};
+
+interface MemoRequest {
+  projectId: string;
+}
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 200,
+      headers: corsHeaders,
+    });
+  }
+
+  try {
+    const { projectId }: MemoRequest = await req.json();
+
+    if (!projectId) {
+      return new Response(
+        JSON.stringify({ error: "projectId is required" }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
+
+    if (!openaiApiKey) {
+      return new Response(
+        JSON.stringify({ error: "OpenAI API key not configured" }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    const { createClient } = await import("npm:@supabase/supabase-js@2");
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data: project, error: projectError } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("id", projectId)
+      .maybeSingle();
+
+    if (projectError || !project) {
+      throw new Error("Project not found");
+    }
+
+    const { data: analysis, error: analysisError } = await supabase
+      .from("project_analysis")
+      .select("*")
+      .eq("project_id", projectId)
+      .maybeSingle();
+
+    if (analysisError || !analysis) {
+      throw new Error("Analysis not found. Please run analysis first.");
+    }
+
+    const metadata = analysis.metadata || {};
+    const strategicAnalysis = analysis.strategic_analysis || { piliers: [] };
+    const blockingQuestions = analysis.blocking_questions || [];
+
+    const prompt = `Tu es un expert en rédaction de mémoires techniques pour le BTP. Génère un mémoire technique professionnel selon ce plan STRICT :
+
+CONTEXTE DU PROJET:
+- Catégorie: ${project.category}
+- Nom: ${project.name}
+- Description: ${project.description}
+- Objet: ${metadata.objet || "Non spécifié"}
+- Maîtrise d'oeuvre: ${metadata.maitrise_oeuvre || "Non spécifié"}
+- Montant: ${metadata.montant || "Non spécifié"}
+- Délais: ${metadata.delais || "Non spécifié"}
+
+ANALYSE STRATÉGIQUE:
+${strategicAnalysis.piliers?.map((p: { title: string; points: string[] }, i: number) =>
+  `${i + 1}. ${p.title}\n${p.points.map((pt: string) => `   - ${pt}`).join("\n")}`
+).join("\n\n") || "Aucune analyse disponible"}
+
+QUESTIONS BLOQUANTES:
+${blockingQuestions.map((q: { question: string; importance: string }) =>
+  `- [${q.importance}] ${q.question}`
+).join("\n") || "Aucune question bloquante"}
+
+STRUCTURE STRICTE DU MÉMOIRE (ne change jamais cette structure) :
+
+**1. Préambule**
+   - Objet du marché
+   - Acteurs du projet (entreprise, maîtrise d'oeuvre, maîtrise d'ouvrage)
+   - Documents de référence (CCTP, CCAP, plans, etc.)
+
+**2. Synthèse de l'offre**
+   - Critères d'attribution et exigences principales
+   - Points forts de notre offre
+   - Notre compréhension du projet
+
+**3. Enjeux & préparation du chantier**
+   - DICT (Déclaration d'Intention de Commencement de Travaux)
+   - Repérages préalables (réseaux, amiante, plomb selon contexte)
+   - EXE (plans d'exécution) si requis par le marché
+
+**4. Modes opératoires**
+   (Cette section DOIT être adaptée selon la sous-section et le CCTP)
+   - Méthodologie détaillée pour chaque phase de travaux
+   - Techniques et procédures spécifiques
+   - Séquencement des opérations
+
+**5. Phasage & maintien de la circulation/exploitation**
+   (Si imposé par le marché)
+   - Planning détaillé par phase
+   - Dispositifs de maintien de la circulation
+   - Mesures pour la continuité d'exploitation
+
+**6. Organisation & moyens**
+   - Équipes : composition, qualification, encadrement
+   - Matériels : engins, outillage, véhicules par catégories
+   - Logistique et approvisionnements
+
+**7. QSE & Environnement**
+   - Qualité : procédures et contrôles qualité
+   - Sécurité : analyse des risques, mesures de prévention, PPSPS
+   - Environnement : gestion des déchets, nuisances, protection
+   - Contrôles et PV (procès-verbaux) requis
+
+**Conclusion : Actions clés & Questions bloquantes**
+   (OBLIGATOIRE)
+   - Récapitulatif des actions prioritaires
+   - Liste des questions bloquantes à lever avant démarrage
+
+IMPORTANT:
+- Génère un mémoire COMPLET, professionnel et détaillé
+- Chaque section doit faire plusieurs paragraphes
+- Utilise des termes techniques appropriés au BTP
+- Adapte UNIQUEMENT la section 4 (Modes opératoires) selon le type de projet
+- Toutes les autres sections restent identiques dans leur structure
+- Sois concret et précis
+- Format: Markdown avec titres et sous-titres clairs`;
+
+    const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${openaiApiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "Tu es un expert en rédaction de mémoires techniques pour le BTP. Tu génères des documents professionnels, détaillés et conformes aux exigences des marchés publics."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 4000,
+      }),
+    });
+
+    if (!openaiResponse.ok) {
+      throw new Error(`OpenAI API error: ${openaiResponse.statusText}`);
+    }
+
+    const openaiData = await openaiResponse.json();
+    const memoContent = openaiData.choices[0].message.content.trim();
+
+    const { data: existingMemo } = await supabase
+      .from("technical_memos")
+      .select("version")
+      .eq("project_id", projectId)
+      .order("version", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const newVersion = existingMemo ? (existingMemo.version || 0) + 1 : 1;
+
+    const { error: insertError } = await supabase
+      .from("technical_memos")
+      .insert({
+        project_id: projectId,
+        content: memoContent,
+        version: newVersion,
+      });
+
+    if (insertError) throw insertError;
+
+    await supabase
+      .from("projects")
+      .update({ status: "completed" })
+      .eq("id", projectId);
+
+    return new Response(
+      JSON.stringify({ success: true, content: memoContent, version: newVersion }),
+      {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  } catch (error) {
+    console.error("Error generating technical memo:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  }
+});

@@ -3,81 +3,43 @@ import { Button } from '../ui/Button';
 import { useState } from 'react';
 
 interface TechnicalMemoSectionProps {
+  projectId: string;
   hasAnalysis: boolean;
   onGenerate: () => Promise<void>;
 }
 
-export function TechnicalMemoSection({ hasAnalysis, onGenerate }: TechnicalMemoSectionProps) {
+export function TechnicalMemoSection({ projectId, hasAnalysis, onGenerate }: TechnicalMemoSectionProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
   const [memoContent, setMemoContent] = useState('');
+  const [memoVersion, setMemoVersion] = useState(1);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
       await onGenerate();
 
-      const mockContent = `# MÉMOIRE TECHNIQUE
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-technical-memo`;
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ projectId }),
+      });
 
-## 1. PRÉSENTATION DE L'ENTREPRISE
+      if (!response.ok) {
+        throw new Error('Failed to generate technical memo');
+      }
 
-Notre entreprise forte de 25 ans d'expérience dans le secteur du BTP, dispose de toutes les qualifications nécessaires pour mener à bien ce projet d'envergure.
-
-## 2. COMPRÉHENSION DU PROJET
-
-Nous avons analysé en détail le dossier de consultation et identifié les points clés suivants :
-- Respect des délais contraints
-- Conformité aux normes en vigueur
-- Coordination optimale des équipes
-
-## 3. MOYENS TECHNIQUES
-
-### 3.1 Matériel
-- Équipement moderne et entretenu
-- Matériel de sécurité conforme
-- Outillage spécialisé
-
-### 3.2 Personnel
-- 15 compagnons qualifiés
-- 3 chefs de chantier expérimentés
-- 1 conducteur de travaux dédié
-
-## 4. MÉTHODOLOGIE D'EXÉCUTION
-
-### 4.1 Planning
-Phase préparatoire : 2 semaines
-Phase d'exécution : 10 mois
-Phase de finition : 2 semaines
-
-### 4.2 Organisation du chantier
-- Installation de chantier optimisée
-- Gestion des flux optimale
-- Sécurité renforcée
-
-## 5. QUALITÉ ET SÉCURITÉ
-
-### 5.1 Démarche qualité
-- Contrôles à chaque étape
-- Documentation complète
-- Traçabilité totale
-
-### 5.2 Sécurité
-- Plan de prévention détaillé
-- Formation continue du personnel
-- Équipements de protection individuels
-
-## 6. DÉVELOPPEMENT DURABLE
-
-- Gestion des déchets optimisée
-- Utilisation de matériaux durables
-- Réduction de l'empreinte carbone
-
-## 7. RÉFÉRENCES
-
-Nous avons réalisé plus de 50 chantiers similaires ces 5 dernières années avec un taux de satisfaction client de 98%.`;
-
-      setMemoContent(mockContent);
+      const { content, version } = await response.json();
+      setMemoContent(content);
+      setMemoVersion(version);
       setHasGenerated(true);
+    } catch (error) {
+      console.error('Error generating technical memo:', error);
+      alert('Erreur lors de la génération du mémoire technique');
     } finally {
       setIsGenerating(false);
     }
@@ -127,33 +89,42 @@ Nous avons réalisé plus de 50 chantiers similaires ces 5 dernières années av
 
       {hasGenerated && (
         <div className="space-y-4">
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadPDF}
-              className="gap-2 flex-1"
-            >
-              <Download className="w-4 h-4" />
-              Télécharger PDF
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadWord}
-              className="gap-2 flex-1"
-            >
-              <Download className="w-4 h-4" />
-              Télécharger Word
-            </Button>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-slate-500">Version {memoVersion}</p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadPDF}
+                className="gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Télécharger PDF
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadWord}
+                className="gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Télécharger Word
+              </Button>
+            </div>
           </div>
 
-          <div className="border border-slate-200 rounded-lg p-6 bg-white max-h-96 overflow-y-auto">
-            <div className="prose prose-sm max-w-none">
-              <pre className="whitespace-pre-wrap font-sans text-sm text-slate-700 leading-relaxed">
-                {memoContent}
-              </pre>
+          <div className="border border-slate-200 rounded-lg p-8 bg-white max-h-[600px] overflow-y-auto">
+            <div className="prose prose-slate max-w-none">
+              <div className="whitespace-pre-wrap text-sm text-slate-800 leading-relaxed"
+                   dangerouslySetInnerHTML={{ __html: memoContent.replace(/\n/g, '<br/>').replace(/##/g, '<h3 class="font-bold text-base mt-4 mb-2">').replace(/#/g, '<h2 class="font-bold text-lg mt-6 mb-3">') }}
+              />
             </div>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-xs text-blue-800">
+              <strong>Structure du mémoire :</strong> 1) Préambule • 2) Synthèse de l'offre • 3) Enjeux & préparation • 4) Modes opératoires • 5) Phasage & maintien circulation • 6) Organisation & moyens • 7) QSE & environnement • Conclusion avec actions clés
+            </p>
           </div>
         </div>
       )}

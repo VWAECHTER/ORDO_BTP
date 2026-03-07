@@ -158,6 +158,7 @@ export function AppelOffres() {
 
                   <div className="border-t border-slate-200 pt-8">
                     <TechnicalMemoSection
+                      projectId={currentProjectId}
                       hasAnalysis={hasAnalysis}
                       onGenerate={handleGenerateMemo}
                     />
