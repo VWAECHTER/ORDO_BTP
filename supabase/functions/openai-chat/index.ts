@@ -15,6 +15,7 @@ interface ChatMessage {
 interface RequestBody {
   messages: ChatMessage[];
   userContext?: Record<string, unknown>;
+  systemPrompt?: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -93,9 +94,9 @@ Deno.serve(async (req: Request) => {
         : "Aucune information d'abonnement disponible.",
     ].join("\n");
 
-    const { messages }: RequestBody = await req.json();
+    const { messages, systemPrompt: customSystemPrompt }: RequestBody = await req.json();
 
-    const systemPrompt = `Tu es un assistant intelligent intégré à l'application de gestion d'entreprise. Tu aides les utilisateurs à gérer leurs projets, leur équipe et leur activité.
+    const defaultSystemPrompt = `Tu es un assistant intelligent intégré à l'application de gestion d'entreprise. Tu aides les utilisateurs à gérer leurs projets, leur équipe et leur activité.
 
 Voici les données actuelles du compte de l'utilisateur :
 ${contextInfo}
@@ -108,8 +109,10 @@ Instructions:
 - Si on te demande des informations non disponibles dans le contexte, dis-le clairement
 - Propose des actions concrètes et des conseils adaptés à la situation de l'utilisateur`;
 
+    const finalSystemPrompt = customSystemPrompt || defaultSystemPrompt;
+
     const openaiMessages: ChatMessage[] = [
-      { role: "system", content: systemPrompt },
+      { role: "system", content: finalSystemPrompt },
       ...messages,
     ];
 

@@ -2,12 +2,15 @@ import { supabase } from './supabase';
 
 export interface ChatMessage {
   id?: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   content: string;
   created_at?: string;
 }
 
-export async function sendChatMessage(messages: ChatMessage[]): Promise<string> {
+export async function sendChatMessage(
+  messages: ChatMessage[],
+  systemPrompt?: string
+): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('Non authentifié');
 
@@ -19,7 +22,7 @@ export async function sendChatMessage(messages: ChatMessage[]): Promise<string> 
       'Authorization': `Bearer ${session.access_token}`,
       'Apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
     },
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({ messages, systemPrompt }),
   });
 
   if (!response.ok) {

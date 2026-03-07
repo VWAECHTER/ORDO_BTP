@@ -2,6 +2,8 @@ import { Send, Download, Loader } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { useState, useRef, useEffect } from 'react';
+import { sendChatMessage, ChatMessage } from '../../lib/chat';
+import { AO_SYSTEM_PROMPT } from '../../lib/aoSystemPrompt';
 
 interface Message {
   id: string;
@@ -18,6 +20,7 @@ export function ChatDialog({ hasMemo }: ChatDialogProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -41,39 +44,35 @@ export function ChatDialog({ hasMemo }: ChatDialogProps) {
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
+    setError(null);
 
-    setTimeout(() => {
+    try {
+      const chatMessages: ChatMessage[] = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      chatMessages.push({
+        role: 'user',
+        content: inputValue
+      });
+
+      const response = await sendChatMessage(chatMessages, AO_SYSTEM_PROMPT);
+
       const assistantMessage: Message = {
         id: Math.random().toString(36).substr(2, 9),
         role: 'assistant',
-        content: generateResponse(inputValue),
+        content: response,
         timestamp: new Date()
       };
+
       setMessages(prev => [...prev, assistantMessage]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de l\'envoi du message');
+      console.error('Chat error:', err);
+    } finally {
       setIsLoading(false);
-    }, 1000);
-  };
-
-  const generateResponse = (question: string): string => {
-    const lowerQuestion = question.toLowerCase();
-
-    if (lowerQuestion.includes('délai') || lowerQuestion.includes('planning')) {
-      return 'Concernant les délais, notre planning prévoit une phase préparatoire de 2 semaines, suivie de 10 mois d\'exécution et 2 semaines de finition. Nous avons prévu des marges de sécurité pour absorber les aléas. Souhaitez-vous que je détaille une phase particulière ?';
     }
-
-    if (lowerQuestion.includes('équipe') || lowerQuestion.includes('personnel')) {
-      return 'Notre équipe sera composée de 15 compagnons qualifiés, 3 chefs de chantier expérimentés et 1 conducteur de travaux dédié. Tous disposent des certifications requises. Voulez-vous plus de détails sur les qualifications ?';
-    }
-
-    if (lowerQuestion.includes('matériel') || lowerQuestion.includes('équipement')) {
-      return 'Nous disposons d\'un parc matériel moderne et régulièrement entretenu, incluant tout l\'équipement nécessaire pour ce type de chantier. Le matériel de sécurité est conforme aux dernières normes. Souhaitez-vous la liste détaillée ?';
-    }
-
-    if (lowerQuestion.includes('référence') || lowerQuestion.includes('expérience')) {
-      return 'Nous avons réalisé plus de 50 chantiers similaires ces 5 dernières années avec un taux de satisfaction client de 98%. Je peux vous fournir des références spécifiques si nécessaire. Quel type de projet vous intéresse particulièrement ?';
-    }
-
-    return 'Je suis là pour vous aider à affiner le mémoire technique. Vous pouvez me poser des questions sur les délais, l\'équipe, le matériel, la méthodologie, ou tout autre aspect du projet. Comment puis-je vous aider ?';
   };
 
   const handleDownloadPDF = () => {
@@ -118,6 +117,12 @@ export function ChatDialog({ hasMemo }: ChatDialogProps) {
           </div>
         )}
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
 
       {!hasMemo && messages.length === 0 && (
         <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">
