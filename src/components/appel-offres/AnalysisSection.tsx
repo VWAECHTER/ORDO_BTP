@@ -1,22 +1,48 @@
-import { AlertCircle, Download, Loader } from 'lucide-react';
+import { AlertCircle, Download, Loader, FileText, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useState } from 'react';
+import { supabase } from '../../lib/supabase';
 
-interface CriticalPoint {
-  id: number;
-  title: string;
+interface Metadata {
+  objet: string;
+  maitrise_oeuvre: string;
+  montant: string;
+  delais: string;
+}
+
+interface DCEDocument {
+  piece: string;
   description: string;
-  severity: 'high' | 'medium' | 'low';
+}
+
+interface StrategicPillar {
+  title: string;
+  points: string[];
+}
+
+interface BlockingQuestion {
+  question: string;
+  importance: string;
+}
+
+interface AnalysisData {
+  metadata: Metadata;
+  dce_map: DCEDocument[];
+  strategic_analysis: {
+    piliers: StrategicPillar[];
+  };
+  blocking_questions: BlockingQuestion[];
 }
 
 interface AnalysisSectionProps {
+  projectId: string;
   hasDocuments: boolean;
   onAnalyze: () => Promise<void>;
 }
 
-export function AnalysisSection({ hasDocuments, onAnalyze }: AnalysisSectionProps) {
+export function AnalysisSection({ projectId, hasDocuments, onAnalyze }: AnalysisSectionProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [criticalPoints, setCriticalPoints] = useState<CriticalPoint[]>([]);
+  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
 
   const handleAnalyze = async () => {
@@ -24,21 +50,26 @@ export function AnalysisSection({ hasDocuments, onAnalyze }: AnalysisSectionProp
     try {
       await onAnalyze();
 
-      const mockPoints: CriticalPoint[] = [
-        { id: 1, title: 'Délai de réalisation contraint', description: 'Le délai imposé de 12 mois nécessite une organisation optimale', severity: 'high' },
-        { id: 2, title: 'Conformité aux normes NF', description: 'Vérification obligatoire de toutes les normes NF en vigueur', severity: 'high' },
-        { id: 3, title: 'Coordination avec les sous-traitants', description: 'Planification rigoureuse des interventions nécessaire', severity: 'medium' },
-        { id: 4, title: 'Contraintes environnementales', description: 'Respect des normes environnementales spécifiques au site', severity: 'medium' },
-        { id: 5, title: 'Accès au chantier limité', description: 'Les horaires d\'accès sont restreints de 8h à 17h', severity: 'medium' },
-        { id: 6, title: 'Qualifications requises', description: 'Certifications spécifiques obligatoires pour le personnel', severity: 'high' },
-        { id: 7, title: 'Garanties financières', description: 'Caution de 10% du montant total requise', severity: 'medium' },
-        { id: 8, title: 'Assurance décennale', description: 'Justificatifs d\'assurance à fournir avant démarrage', severity: 'high' },
-        { id: 9, title: 'Matériaux spécifiques', description: 'Liste de matériaux imposés par le maître d\'ouvrage', severity: 'low' },
-        { id: 10, title: 'Reporting hebdomadaire', description: 'Compte-rendu d\'avancement obligatoire chaque semaine', severity: 'low' }
-      ];
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-documents`;
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ projectId }),
+      });
 
-      setCriticalPoints(mockPoints);
+      if (!response.ok) {
+        throw new Error('Failed to analyze documents');
+      }
+
+      const { analysis } = await response.json();
+      setAnalysisData(analysis);
       setHasAnalyzed(true);
+    } catch (error) {
+      console.error('Error analyzing documents:', error);
+      alert('Erreur lors de l\'analyse des documents');
     } finally {
       setIsAnalyzing(false);
     }
@@ -48,21 +79,11 @@ export function AnalysisSection({ hasDocuments, onAnalyze }: AnalysisSectionProp
     console.log('Downloading analysis as PDF...');
   };
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'high': return 'bg-red-100 text-red-700 border-red-200';
-      case 'medium': return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'low': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
-    }
-  };
-
-  const getSeverityLabel = (severity: string) => {
-    switch (severity) {
-      case 'high': return 'Critique';
-      case 'medium': return 'Important';
-      case 'low': return 'À surveiller';
-      default: return '';
+  const getImportanceColor = (importance: string) => {
+    switch (importance.toLowerCase()) {
+      case 'critique': return 'bg-red-100 text-red-700 border-red-200';
+      case 'important': return 'bg-orange-100 text-orange-700 border-orange-200';
+      default: return 'bg-yellow-100 text-yellow-700 border-yellow-200';
     }
   };
 
@@ -97,11 +118,11 @@ export function AnalysisSection({ hasDocuments, onAnalyze }: AnalysisSectionProp
         </div>
       )}
 
-      {hasAnalyzed && criticalPoints.length > 0 && (
-        <div className="space-y-4">
+      {hasAnalyzed && analysisData && (
+        <div className="space-y-6">
           <div className="flex justify-between items-center">
             <p className="text-sm text-slate-600">
-              {criticalPoints.length} points critiques identifiés
+              Analyse complétée
             </p>
             <Button
               variant="outline"
@@ -114,26 +135,88 @@ export function AnalysisSection({ hasDocuments, onAnalyze }: AnalysisSectionProp
             </Button>
           </div>
 
-          <div className="space-y-3">
-            {criticalPoints.map(point => (
-              <div
-                key={point.id}
-                className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-sm font-bold text-slate-400">#{point.id}</span>
-                      <h4 className="font-semibold text-slate-900">{point.title}</h4>
-                    </div>
-                    <p className="text-sm text-slate-600">{point.description}</p>
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${getSeverityColor(point.severity)}`}>
-                    {getSeverityLabel(point.severity)}
-                  </span>
+          <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-blue-600" />
+                A) Métadonnées de l'Appel d'Offres
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-medium text-slate-500 mb-1">Objet</p>
+                  <p className="text-sm text-slate-900">{analysisData.metadata.objet}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-slate-500 mb-1">Maîtrise d'oeuvre</p>
+                  <p className="text-sm text-slate-900">{analysisData.metadata.maitrise_oeuvre}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-slate-500 mb-1">Montant</p>
+                  <p className="text-sm text-slate-900">{analysisData.metadata.montant}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-slate-500 mb-1">Délais</p>
+                  <p className="text-sm text-slate-900">{analysisData.metadata.delais}</p>
                 </div>
               </div>
-            ))}
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-6">
+              <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-slate-600" />
+                B) Carte du DCE
+              </h4>
+              <div className="space-y-2">
+                {analysisData.dce_map.map((doc, index) => (
+                  <div key={index} className="flex items-start gap-3 p-3 bg-white rounded border border-slate-200">
+                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-900">{doc.piece}</p>
+                      <p className="text-xs text-slate-600">{doc.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white border border-slate-300 rounded-lg p-6">
+              <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-slate-700" />
+                C) Analyse Stratégique (5 Piliers)
+              </h4>
+              <div className="space-y-4">
+                {analysisData.strategic_analysis.piliers.map((pilier, index) => (
+                  <div key={index} className="border border-slate-200 rounded-lg p-4">
+                    <h5 className="font-semibold text-slate-900 mb-3">{pilier.title}</h5>
+                    <ul className="space-y-2">
+                      {pilier.points.map((point, pointIndex) => (
+                        <li key={pointIndex} className="text-sm text-slate-700 flex items-start gap-2">
+                          <span className="text-blue-600 mt-1">•</span>
+                          <span>{point}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+                D) Questions Bloquantes
+              </h4>
+              <div className="space-y-3">
+                {analysisData.blocking_questions.map((item, index) => (
+                  <div key={index} className="flex items-start justify-between gap-4 p-3 bg-white rounded border border-red-200">
+                    <p className="text-sm text-slate-900 flex-1">{item.question}</p>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${getImportanceColor(item.importance)}`}>
+                      {item.importance}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}

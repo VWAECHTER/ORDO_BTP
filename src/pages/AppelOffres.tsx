@@ -150,6 +150,7 @@ export function AppelOffres() {
 
                   <div className="border-t border-slate-200 pt-8">
                     <AnalysisSection
+                      projectId={currentProjectId}
                       hasDocuments={hasDocuments}
                       onAnalyze={handleAnalyze}
                     />
