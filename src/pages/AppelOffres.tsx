@@ -1,11 +1,13 @@
 import { AppLayout } from '../components/layout/AppLayout';
 import { Card } from '../components/ui/Card';
 import { Building, Construction, HardHat, FolderOpen, Truck } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileUpload } from '../components/appel-offres/FileUpload';
 import { AnalysisSection } from '../components/appel-offres/AnalysisSection';
 import { TechnicalMemoSection } from '../components/appel-offres/TechnicalMemoSection';
 import { ChatDialog } from '../components/appel-offres/ChatDialog';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 const categories = [
   {
@@ -39,15 +41,43 @@ const categories = [
 ];
 
 export function AppelOffres() {
+  const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [hasDocuments, setHasDocuments] = useState(false);
   const [hasAnalysis, setHasAnalysis] = useState(false);
   const [hasMemo, setHasMemo] = useState(false);
 
-  const handleFilesChange = (files: File[]) => {
-    if (files.length > 0) {
-      setHasDocuments(true);
+  const handleCategorySelect = async (categoryId: string) => {
+    setSelectedCategory(categoryId);
+
+    if (!user) return;
+
+    try {
+      const { data: project, error } = await supabase
+        .from('projects')
+        .insert({
+          user_id: user.id,
+          category: categoryId,
+          name: categories.find(c => c.id === categoryId)?.name || 'Nouveau projet',
+          status: 'draft'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setCurrentProjectId(project.id);
+      setHasDocuments(false);
+      setHasAnalysis(false);
+      setHasMemo(false);
+    } catch (error) {
+      console.error('Error creating project:', error);
     }
+  };
+
+  const handleFilesUploaded = () => {
+    setHasDocuments(true);
   };
 
   const handleAnalyze = async () => {
@@ -78,7 +108,7 @@ export function AppelOffres() {
                 className={`cursor-pointer transition-all ${
                   isSelected ? 'ring-2 ring-slate-900 shadow-lg' : ''
                 }`}
-                onClick={() => setSelectedCategory(category.id)}
+                onClick={() => handleCategorySelect(category.id)}
               >
                 <div className="p-6">
                   <div className={`w-12 h-12 ${category.color} rounded-lg flex items-center justify-center mb-4`}>
@@ -96,7 +126,7 @@ export function AppelOffres() {
           })}
         </div>
 
-        {selectedCategory && (
+        {selectedCategory && currentProjectId && (
           <div className="space-y-6">
             <Card>
               <div className="p-6">
@@ -112,7 +142,10 @@ export function AppelOffres() {
                     <h3 className="text-lg font-semibold text-slate-900 mb-4">
                       Dossier marché (DCE)
                     </h3>
-                    <FileUpload onFilesChange={handleFilesChange} />
+                    <FileUpload
+                      projectId={currentProjectId}
+                      onFilesUploaded={handleFilesUploaded}
+                    />
                   </div>
 
                   <div className="border-t border-slate-200 pt-8">
