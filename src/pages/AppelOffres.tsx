@@ -47,6 +47,7 @@ export function AppelOffres() {
   const [hasDocuments, setHasDocuments] = useState(false);
   const [hasAnalysis, setHasAnalysis] = useState(false);
   const [hasMemo, setHasMemo] = useState(false);
+  const [memoContent, setMemoContent] = useState<string>('');
 
   const handleCategorySelect = async (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -88,6 +89,10 @@ export function AppelOffres() {
   const handleGenerateMemo = async () => {
     await new Promise(resolve => setTimeout(resolve, 2000));
     setHasMemo(true);
+  };
+
+  const handleMemoGenerated = (content: string) => {
+    setMemoContent(content);
   };
 
   return (
@@ -161,11 +166,17 @@ export function AppelOffres() {
                       projectId={currentProjectId}
                       hasAnalysis={hasAnalysis}
                       onGenerate={handleGenerateMemo}
+                      onMemoGenerated={handleMemoGenerated}
                     />
                   </div>
 
                   <div className="border-t border-slate-200 pt-8">
-                    <ChatDialog hasMemo={hasMemo} />
+                    <ChatDialog
+                      hasMemo={hasMemo}
+                      projectId={currentProjectId}
+                      category={categories.find(c => c.id === selectedCategory)?.name || ''}
+                      memoContent={memoContent}
+                    />
                   </div>
                 </div>
               </div>

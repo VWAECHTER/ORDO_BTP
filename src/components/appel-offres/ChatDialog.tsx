@@ -3,7 +3,8 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { useState, useRef, useEffect } from 'react';
 import { sendChatMessage, ChatMessage } from '../../lib/chat';
-import { AO_SYSTEM_PROMPT } from '../../lib/aoSystemPrompt';
+import { getRevisionSystemPrompt } from '../../lib/revisionSystemPrompt';
+import { supabase } from '../../lib/supabase';
 
 interface Message {
   id: string;
@@ -14,13 +15,17 @@ interface Message {
 
 interface ChatDialogProps {
   hasMemo: boolean;
+  projectId: string;
+  category: string;
+  memoContent?: string;
 }
 
-export function ChatDialog({ hasMemo }: ChatDialogProps) {
+export function ChatDialog({ hasMemo, projectId, category, memoContent }: ChatDialogProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [targetSection, setTargetSection] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -47,6 +52,28 @@ export function ChatDialog({ hasMemo }: ChatDialogProps) {
     setError(null);
 
     try {
+      const { data: project } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .maybeSingle();
+
+      const { data: documents } = await supabase
+        .from('documents')
+        .select('content')
+        .eq('project_id', projectId);
+
+      const dceDocuments = documents?.map(doc => doc.content).join('\n\n') || '';
+      const companyExample = '';
+
+      const systemPrompt = getRevisionSystemPrompt(
+        category,
+        memoContent || '',
+        dceDocuments,
+        companyExample,
+        targetSection || undefined
+      );
+
       const chatMessages: ChatMessage[] = messages.map(msg => ({
         role: msg.role,
         content: msg.content
@@ -57,7 +84,7 @@ export function ChatDialog({ hasMemo }: ChatDialogProps) {
         content: inputValue
       });
 
-      const response = await sendChatMessage(chatMessages, AO_SYSTEM_PROMPT);
+      const response = await sendChatMessage(chatMessages, systemPrompt);
 
       const assistantMessage: Message = {
         id: Math.random().toString(36).substr(2, 9),
@@ -176,22 +203,33 @@ export function ChatDialog({ hasMemo }: ChatDialogProps) {
           </div>
 
           <div className="p-4 bg-white border-t border-slate-200">
-            <div className="flex gap-2">
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Posez votre question..."
-                disabled={isLoading}
-                className="flex-1"
-              />
-              <Button
-                onClick={handleSend}
-                disabled={!inputValue.trim() || isLoading}
-                className="gap-2"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  value={targetSection}
+                  onChange={(e) => setTargetSection(e.target.value)}
+                  placeholder="Cible (optionnel) : Section 4, Tableau moyens..."
+                  disabled={isLoading}
+                  className="flex-1 text-xs"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Posez votre question..."
+                  disabled={isLoading}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={handleSend}
+                  disabled={!inputValue.trim() || isLoading}
+                  className="gap-2"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>

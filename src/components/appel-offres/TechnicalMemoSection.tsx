@@ -6,9 +6,10 @@ interface TechnicalMemoSectionProps {
   projectId: string;
   hasAnalysis: boolean;
   onGenerate: () => Promise<void>;
+  onMemoGenerated?: (content: string) => void;
 }
 
-export function TechnicalMemoSection({ projectId, hasAnalysis, onGenerate }: TechnicalMemoSectionProps) {
+export function TechnicalMemoSection({ projectId, hasAnalysis, onGenerate, onMemoGenerated }: TechnicalMemoSectionProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
   const [memoContent, setMemoContent] = useState('');
@@ -37,6 +38,10 @@ export function TechnicalMemoSection({ projectId, hasAnalysis, onGenerate }: Tec
       setMemoContent(content);
       setMemoVersion(version);
       setHasGenerated(true);
+
+      if (onMemoGenerated) {
+        onMemoGenerated(content);
+      }
     } catch (error) {
       console.error('Error generating technical memo:', error);
       alert('Erreur lors de la génération du mémoire technique');
