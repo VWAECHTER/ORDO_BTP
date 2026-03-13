@@ -2,221 +2,219 @@ import { useAuth } from '../context/AuthContext';
 import { AppLayout } from '../components/layout/AppLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button } from '../components/ui';
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import {
-  TrendingUp,
-  Users,
-  FolderKanban,
+  FileText,
+  Mic,
   ArrowRight,
-  Activity,
-  Calendar,
-  CheckCircle2,
+  FolderOpen,
   Clock,
-  BarChart3
+  CheckCircle2,
+  TrendingUp
 } from 'lucide-react';
-
-const quickStats = [
-  {
-    label: 'Projets actifs',
-    value: '12',
-    change: '+2 ce mois',
-    icon: FolderKanban,
-    color: 'bg-blue-50 text-blue-600',
-  },
-  {
-    label: 'Membres equipe',
-    value: '8',
-    change: '+1 cette semaine',
-    icon: Users,
-    color: 'bg-green-50 text-green-600',
-  },
-  {
-    label: 'Taches terminees',
-    value: '47',
-    change: '+12 cette semaine',
-    icon: CheckCircle2,
-    color: 'bg-slate-100 text-slate-600',
-  },
-  {
-    label: 'Taux completion',
-    value: '78%',
-    change: '+5% vs mois dernier',
-    icon: TrendingUp,
-    color: 'bg-emerald-50 text-emerald-600',
-  },
-];
-
-const recentActivity = [
-  {
-    id: 1,
-    action: 'Projet "Refonte site" mis a jour',
-    time: 'Il y a 2 heures',
-    icon: FolderKanban,
-  },
-  {
-    id: 2,
-    action: 'Marie Dupont a rejoint l\'equipe',
-    time: 'Il y a 5 heures',
-    icon: Users,
-  },
-  {
-    id: 3,
-    action: 'Tache "Design maquettes" terminee',
-    time: 'Hier',
-    icon: CheckCircle2,
-  },
-  {
-    id: 4,
-    action: 'Nouveau rapport analytique disponible',
-    time: 'Il y a 2 jours',
-    icon: BarChart3,
-  },
-];
-
-const upcomingTasks = [
-  {
-    id: 1,
-    title: 'Reunion equipe produit',
-    dueDate: 'Aujourd\'hui, 14h00',
-    priority: 'high',
-  },
-  {
-    id: 2,
-    title: 'Revue de code sprint 12',
-    dueDate: 'Demain, 10h00',
-    priority: 'medium',
-  },
-  {
-    id: 3,
-    title: 'Livraison maquettes v2',
-    dueDate: '18 fevrier',
-    priority: 'high',
-  },
-  {
-    id: 4,
-    title: 'Point client mensuel',
-    dueDate: '20 fevrier',
-    priority: 'low',
-  },
-];
-
-const priorityColors = {
-  high: 'bg-red-100 text-red-700',
-  medium: 'bg-yellow-100 text-yellow-700',
-  low: 'bg-slate-100 text-slate-600',
-};
 
 export function Dashboard() {
   const { user, profile } = useAuth();
+  const [appelOffresCount, setAppelOffresCount] = useState(0);
+  const [meetingsCount, setMeetingsCount] = useState(0);
+  const [recentProjects, setRecentProjects] = useState<any[]>([]);
+  const [recentMeetings, setRecentMeetings] = useState<any[]>([]);
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Utilisateur';
-  const createdAt = profile?.created_at
-    ? new Date(profile.created_at).toLocaleDateString('fr-FR', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
-    : '-';
 
   const hour = new Date().getHours();
   let greeting = 'Bonjour';
   if (hour >= 18) greeting = 'Bonsoir';
   else if (hour < 6) greeting = 'Bonne nuit';
 
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      if (!user?.id) return;
+
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      const { data: meetings } = await supabase
+        .from('meeting_recordings')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      const { count: projectsCount } = await supabase
+        .from('projects')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      const { count: meetingsCountResult } = await supabase
+        .from('meeting_recordings')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      setAppelOffresCount(projectsCount || 0);
+      setMeetingsCount(meetingsCountResult || 0);
+      setRecentProjects(projects || []);
+      setRecentMeetings(meetings || []);
+    };
+
+    loadDashboardData();
+  }, [user?.id]);
+
   return (
     <AppLayout
       title="Tableau de bord"
-      description={`${greeting}, ${displayName}. Voici un apercu de votre activite.`}
+      description={`${greeting}, ${displayName}. Gérez vos appels d'offres et réunions.`}
     >
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        {quickStats.map((stat) => (
-          <Card key={stat.label} className="hover:shadow-md transition-shadow">
-            <CardContent>
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-2.5 rounded-xl ${stat.color}`}>
-                  <stat.icon className="w-5 h-5" />
-                </div>
+      <div className="grid gap-6 md:grid-cols-2 mb-8">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent>
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600">
+                <FileText className="w-5 h-5" />
               </div>
-              <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-              <p className="text-sm text-slate-500 mt-1">{stat.label}</p>
-              <p className="text-xs text-green-600 mt-2">{stat.change}</p>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+            <p className="text-2xl font-bold text-slate-900">{appelOffresCount}</p>
+            <p className="text-sm text-slate-500 mt-1">Appels d'offres</p>
+            <Link to="/appel-offres">
+              <Button variant="ghost" size="sm" className="mt-3 w-full">
+                Gérer les AO
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent>
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2.5 rounded-xl bg-green-50 text-green-600">
+                <Mic className="w-5 h-5" />
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-slate-900">{meetingsCount}</p>
+            <p className="text-sm text-slate-500 mt-1">Réunions enregistrées</p>
+            <Link to="/assistant-reunion">
+              <Button variant="ghost" size="sm" className="mt-3 w-full">
+                Nouvelle réunion
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3 mb-8">
-        <Card className="lg:col-span-2">
+      <div className="grid gap-6 lg:grid-cols-2 mb-8">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Activity className="w-5 h-5" />
-              Activite recente
+              <FolderOpen className="w-5 h-5" />
+              Appels d'offres récents
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  <div className="p-2 bg-slate-100 rounded-lg">
-                    <activity.icon className="w-4 h-4 text-slate-600" />
+            {recentProjects.length === 0 ? (
+              <div className="text-center py-8">
+                <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-sm text-slate-500 mb-4">
+                  Aucun appel d'offres pour le moment
+                </p>
+                <Link to="/appel-offres">
+                  <Button size="sm">
+                    Créer un appel d'offres
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentProjects.map((project) => (
+                  <div
+                    key={project.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors"
+                  >
+                    <div className="p-2 bg-slate-50 rounded-lg">
+                      <FileText className="w-4 h-4 text-slate-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-900 truncate">
+                        {project.name}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {new Date(project.created_at).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900 truncate">
-                      {activity.action}
-                    </p>
-                    <p className="text-xs text-slate-500">{activity.time}</p>
-                  </div>
+                ))}
+                <div className="pt-2 border-t border-slate-100">
+                  <Link to="/appel-offres">
+                    <Button variant="ghost" size="sm" className="w-full">
+                      Voir tous les appels d'offres
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </Link>
                 </div>
-              ))}
-            </div>
-            <div className="mt-4 pt-4 border-t border-slate-100">
-              <Button variant="ghost" size="sm" className="w-full">
-                Voir toute l'activite
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Taches a venir
+              <Mic className="w-5 h-5" />
+              Réunions récentes
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {upcomingTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="p-3 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <p className="text-sm font-medium text-slate-900 line-clamp-1">
-                      {task.title}
-                    </p>
-                    <span className={`flex-shrink-0 px-2 py-0.5 rounded text-xs font-medium ${priorityColors[task.priority as keyof typeof priorityColors]}`}>
-                      {task.priority === 'high' ? 'Urgent' : task.priority === 'medium' ? 'Normal' : 'Faible'}
-                    </span>
+            {recentMeetings.length === 0 ? (
+              <div className="text-center py-8">
+                <Mic className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-sm text-slate-500 mb-4">
+                  Aucune réunion enregistrée
+                </p>
+                <Link to="/assistant-reunion">
+                  <Button size="sm">
+                    Enregistrer une réunion
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentMeetings.map((meeting) => (
+                  <div
+                    key={meeting.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors"
+                  >
+                    <div className="p-2 bg-slate-50 rounded-lg">
+                      <Mic className="w-4 h-4 text-slate-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-900 truncate">
+                        {meeting.title || 'Réunion sans titre'}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {new Date(meeting.created_at).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
+                    {meeting.status === 'completed' && (
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    )}
                   </div>
-                  <p className="text-xs text-slate-500 flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {task.dueDate}
-                  </p>
+                ))}
+                <div className="pt-2 border-t border-slate-100">
+                  <Link to="/assistant-reunion">
+                    <Button variant="ghost" size="sm" className="w-full">
+                      Voir toutes les réunions
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </Link>
                 </div>
-              ))}
-            </div>
-            <div className="mt-4 pt-4 border-t border-slate-100">
-              <Link to="/projects">
-                <Button variant="ghost" size="sm" className="w-full">
-                  Voir tous les projets
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -224,28 +222,44 @@ export function Dashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Acces rapides</CardTitle>
+            <CardTitle>Accès rapides</CardTitle>
             <CardDescription>
-              Raccourcis vers les fonctionnalites principales
+              Lancez rapidement vos principales fonctionnalités
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: 'Analytiques', href: '/analytics', icon: BarChart3 },
-                { label: 'Projets', href: '/projects', icon: FolderKanban },
-                { label: 'Equipe', href: '/team', icon: Users },
-                { label: 'Parametres', href: '/settings', icon: Activity },
-              ].map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors"
-                >
-                  <item.icon className="w-5 h-5 text-slate-600" />
-                  <span className="font-medium text-slate-900">{item.label}</span>
-                </Link>
-              ))}
+            <div className="space-y-3">
+              <Link
+                to="/appel-offres"
+                className="flex items-center justify-between p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white rounded-lg shadow-sm">
+                    <FileText className="w-5 h-5 text-slate-700" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-900">Appels d'offres</p>
+                    <p className="text-xs text-slate-500">Créer et gérer vos AO</p>
+                  </div>
+                </div>
+                <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors" />
+              </Link>
+
+              <Link
+                to="/assistant-reunion"
+                className="flex items-center justify-between p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white rounded-lg shadow-sm">
+                    <Mic className="w-5 h-5 text-slate-700" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-900">Assistant réunion</p>
+                    <p className="text-xs text-slate-500">Enregistrer et synthétiser</p>
+                  </div>
+                </div>
+                <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors" />
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -254,7 +268,7 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle>Informations du compte</CardTitle>
             <CardDescription>
-              Details de votre profil
+              Détails de votre profil
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -262,16 +276,12 @@ export function Dashboard() {
               <div className="flex justify-between py-2 border-b border-slate-100">
                 <dt className="text-slate-600">Nom</dt>
                 <dd className="font-medium text-slate-900">
-                  {profile?.full_name || 'Non renseigne'}
+                  {profile?.full_name || 'Non renseigné'}
                 </dd>
               </div>
               <div className="flex justify-between py-2 border-b border-slate-100">
                 <dt className="text-slate-600">Email</dt>
-                <dd className="font-medium text-slate-900">{user?.email}</dd>
-              </div>
-              <div className="flex justify-between py-2 border-b border-slate-100">
-                <dt className="text-slate-600">Membre depuis</dt>
-                <dd className="font-medium text-slate-900">{createdAt}</dd>
+                <dd className="font-medium text-slate-900 truncate max-w-[200px]">{user?.email}</dd>
               </div>
               <div className="flex justify-between py-2">
                 <dt className="text-slate-600">Statut</dt>
@@ -281,6 +291,13 @@ export function Dashboard() {
                 </dd>
               </div>
             </dl>
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <Link to="/settings">
+                <Button variant="outline" size="sm" className="w-full">
+                  Gérer mon compte
+                </Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>
