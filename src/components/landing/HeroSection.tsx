@@ -28,8 +28,8 @@ export default function HeroSection() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <div className="animate-fade-in">
-          <p className="text-gold-400 text-sm font-semibold uppercase tracking-[0.25em] mb-6">
-            ORDO BTP
+          <p className="text-gold-400 text-2xl font-semibold uppercase tracking-[0.25em] mb-6">
+            ORDO
           </p>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
