@@ -50,18 +50,23 @@ export function AnalysisSection({ projectId, hasDocuments, onAnalyze }: Analysis
     try {
       await onAnalyze();
 
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Non authentifié');
+
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-documents`;
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer ${session.access_token}`,
+          'Apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ projectId }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to analyze documents');
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Échec de l\'analyse des documents');
       }
 
       const { analysis } = await response.json();
@@ -69,7 +74,7 @@ export function AnalysisSection({ projectId, hasDocuments, onAnalyze }: Analysis
       setHasAnalyzed(true);
     } catch (error) {
       console.error('Error analyzing documents:', error);
-      alert('Erreur lors de l\'analyse des documents');
+      alert('Erreur lors de l\'analyse des documents : ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsAnalyzing(false);
     }

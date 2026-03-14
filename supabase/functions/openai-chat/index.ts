@@ -125,7 +125,7 @@ Instructions:
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: openaiMessages,
-        max_tokens: 1000,
+        max_tokens: 4000,
         temperature: 0.7,
       }),
     });

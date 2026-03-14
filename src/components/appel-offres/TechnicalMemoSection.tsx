@@ -1,6 +1,7 @@
 import { FileText, Download, Loader } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useState } from 'react';
+import { supabase } from '../../lib/supabase';
 
 interface TechnicalMemoSectionProps {
   projectId: string;
@@ -20,18 +21,23 @@ export function TechnicalMemoSection({ projectId, hasAnalysis, onGenerate, onMem
     try {
       await onGenerate();
 
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Non authentifié');
+
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-technical-memo`;
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer ${session.access_token}`,
+          'Apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ projectId }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate technical memo');
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Échec de la génération du mémoire technique');
       }
 
       const { content, version } = await response.json();
@@ -44,7 +50,7 @@ export function TechnicalMemoSection({ projectId, hasAnalysis, onGenerate, onMem
       }
     } catch (error) {
       console.error('Error generating technical memo:', error);
-      alert('Erreur lors de la génération du mémoire technique');
+      alert('Erreur lors de la génération du mémoire technique : ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsGenerating(false);
     }
