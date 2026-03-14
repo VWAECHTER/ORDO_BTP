@@ -6,21 +6,20 @@ import { supabase } from '../../lib/supabase';
 interface TechnicalMemoSectionProps {
   projectId: string;
   hasAnalysis: boolean;
-  onGenerate: () => Promise<void>;
   onMemoGenerated?: (content: string) => void;
 }
 
-export function TechnicalMemoSection({ projectId, hasAnalysis, onGenerate, onMemoGenerated }: TechnicalMemoSectionProps) {
+export function TechnicalMemoSection({ projectId, hasAnalysis, onMemoGenerated }: TechnicalMemoSectionProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
   const [memoContent, setMemoContent] = useState('');
   const [memoVersion, setMemoVersion] = useState(1);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
+    setError(null);
     try {
-      await onGenerate();
-
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Non authentifié');
 
@@ -48,9 +47,9 @@ export function TechnicalMemoSection({ projectId, hasAnalysis, onGenerate, onMem
       if (onMemoGenerated) {
         onMemoGenerated(content);
       }
-    } catch (error) {
-      console.error('Error generating technical memo:', error);
-      alert('Erreur lors de la génération du mémoire technique : ' + (error instanceof Error ? error.message : String(error)));
+    } catch (err) {
+      console.error('Error generating technical memo:', err);
+      setError(err instanceof Error ? err.message : 'Erreur lors de la génération du mémoire technique');
     } finally {
       setIsGenerating(false);
     }
@@ -88,6 +87,12 @@ export function TechnicalMemoSection({ projectId, hasAnalysis, onGenerate, onMem
           </Button>
         )}
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
 
       {!hasAnalysis && !hasGenerated && (
         <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">

@@ -37,19 +37,19 @@ interface AnalysisData {
 interface AnalysisSectionProps {
   projectId: string;
   hasDocuments: boolean;
-  onAnalyze: () => Promise<void>;
+  onAnalysisComplete: () => void;
 }
 
-export function AnalysisSection({ projectId, hasDocuments, onAnalyze }: AnalysisSectionProps) {
+export function AnalysisSection({ projectId, hasDocuments, onAnalysisComplete }: AnalysisSectionProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
+    setError(null);
     try {
-      await onAnalyze();
-
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Non authentifié');
 
@@ -72,9 +72,10 @@ export function AnalysisSection({ projectId, hasDocuments, onAnalyze }: Analysis
       const { analysis } = await response.json();
       setAnalysisData(analysis);
       setHasAnalyzed(true);
-    } catch (error) {
-      console.error('Error analyzing documents:', error);
-      alert('Erreur lors de l\'analyse des documents : ' + (error instanceof Error ? error.message : String(error)));
+      onAnalysisComplete();
+    } catch (err) {
+      console.error('Error analyzing documents:', err);
+      setError(err instanceof Error ? err.message : 'Erreur lors de l\'analyse des documents');
     } finally {
       setIsAnalyzing(false);
     }
@@ -113,6 +114,12 @@ export function AnalysisSection({ projectId, hasDocuments, onAnalyze }: Analysis
           </Button>
         )}
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
 
       {!hasDocuments && !hasAnalyzed && (
         <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">

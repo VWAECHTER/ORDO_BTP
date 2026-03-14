@@ -81,18 +81,13 @@ export function AppelOffres() {
     setHasDocuments(true);
   };
 
-  const handleAnalyze = async () => {
-    await new Promise(resolve => setTimeout(resolve, 2000));
+  const handleAnalysisComplete = () => {
     setHasAnalysis(true);
-  };
-
-  const handleGenerateMemo = async () => {
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setHasMemo(true);
   };
 
   const handleMemoGenerated = (content: string) => {
     setMemoContent(content);
+    setHasMemo(true);
   };
 
   return (
@@ -157,7 +152,7 @@ export function AppelOffres() {
                     <AnalysisSection
                       projectId={currentProjectId}
                       hasDocuments={hasDocuments}
-                      onAnalyze={handleAnalyze}
+                      onAnalysisComplete={handleAnalysisComplete}
                     />
                   </div>
 
@@ -165,7 +160,6 @@ export function AppelOffres() {
                     <TechnicalMemoSection
                       projectId={currentProjectId}
                       hasAnalysis={hasAnalysis}
-                      onGenerate={handleGenerateMemo}
                       onMemoGenerated={handleMemoGenerated}
                     />
                   </div>
