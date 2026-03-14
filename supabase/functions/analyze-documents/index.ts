@@ -173,7 +173,8 @@ NE GÉNÈRE PAS de mémoire technique. C'est une ANALYSE STRATÉGIQUE uniquement
     });
 
     if (!openaiResponse.ok) {
-      throw new Error(`OpenAI API error: ${openaiResponse.statusText}`);
+      const errBody = await openaiResponse.text();
+      throw new Error(`OpenAI API error ${openaiResponse.status}: ${errBody}`);
     }
 
     const openaiData = await openaiResponse.json();
